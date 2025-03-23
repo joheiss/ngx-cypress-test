@@ -35,3 +35,15 @@
 //     }
 //   }
 // }
+
+Cypress.Commands.add("getByTestId", (testId) => {
+  return cy.get(`[data-cy=${testId}]`);
+});
+
+Cypress.Commands.add("navigateTo", (clicks) => {
+  // click thru list of clicks
+  for (const item of clicks) {
+    cy.contains(item).click();
+  }
+});
+
