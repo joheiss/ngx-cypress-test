@@ -2,6 +2,7 @@
 import { formsLayoutPage } from "../support/page-objects/FormsLayoutPage";
 import { navigation } from "../support/page-objects/NavigationPage";
 import { datePickerPage } from "../support/page-objects/DatePickerPage";
+import { smartTablePage } from "../support/page-objects/SmartTablePage";
 
 describe("Testing with Page Object Models (POM)", () => {
 
@@ -39,5 +40,13 @@ describe("Testing with Page Object Models (POM)", () => {
     navigation.toDatePickerPage();
     datePickerPage.selectDate(1);
     datePickerPage.selectDateRange(1, 10);
+  });
+
+  it("should update a specific row in the table", () => {
+    navigation.toSmartTablePage();
+    smartTablePage.updateAgeByFirstName("Larry", 33);
+    smartTablePage.filterByAge(25);
+    smartTablePage.addUser("Hansi", "Hampelmann", "hansi@horsti.de", "25");
+    smartTablePage.deleteUserByEmail("hansi@horsti.de");
   });
 });
