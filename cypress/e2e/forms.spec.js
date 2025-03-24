@@ -1,5 +1,34 @@
 /// <reference types="cypress" />
 
+describe("Header testing", () => {
+
+  beforeEach(() => {
+    cy.visit("/");
+  });
+
+  it("should allow to select an entry from theme dropdown", () => {
+    // cy.get("nav").find("nb-select").click();
+    cy.get("nav nb-select").click();
+    cy.get(".options-list nb-option").should("have.length.greaterThan", 3);
+    cy.get(".options-list nb-option").contains(/dark/i).click();
+    cy.get("nav nb-select").invoke("text").should("match", /dark/i);
+  });
+
+  it("should allow to select each entry from theme dropdown", () => {
+    cy.get("nav nb-select").then(dropDown => {
+      cy.wrap(dropDown).click();
+      cy.get(".options-list nb-option").each((option, index) => {
+        const optionText = option.text().trim();
+        cy.wrap(option).click();
+        cy.wrap(dropDown).should("contain", optionText);
+        if (index < 3) {
+          cy.wrap(dropDown).click();
+        }
+      });
+    });
+  });
+});
+
 describe("Forms testing", () => {
 
   beforeEach(() => {
@@ -157,8 +186,7 @@ describe("Forms testing", () => {
 
     });
 
-    it.only("should handle future date selections correctly", () => {
-
+    it("should handle future date selections correctly", () => {
 
       // -- select date in date picker and check if it is correct
       cy.get("@commonDatePickerCard").find("input").then(input => {
@@ -170,38 +198,160 @@ describe("Forms testing", () => {
     });
 
   });
+});
+describe("Modal & Overlays - Toasters", () => {
+  beforeEach(() => {
+    // -- navigate to Modal & Overlays -> Toastr
+    cy.navigateTo(["Modal & Overlays", "Toastr"]);
+    cy.contains("nb-card", /toaster configuration/i).as("toasterConfigCard");
+  });
 
-  describe("Modal & Overlays ...", () => {
-    beforeEach(() => {
-      // -- navigate to Modal & Overlays -> Toastr
-      cy.navigateTo(["Modal & Overlays", "Toastr"]);
-      cy.contains("nb-card", /toaster configuration/i).as("toasterConfigCard");
-   });
+  it("should handle the checkboxes correctly", () => {
+    // -- get checkbox and check it
+    cy.get("@toasterConfigCard")
+      .contains("nb-checkbox", /hide on click/i)
+      .find("[type=checkbox]")
+      .first()
+      .as("checkbox-1");
+    cy.get("@checkbox-1")
+      .check({ force: true });
+    cy.get("@checkbox-1").should("be.checked");
 
-    it("should handle the checkboxes correctly", () => {
-      // -- get checkbox and check it
-      cy.get("@toasterConfigCard")
-        .contains("nb-checkbox", /hide on click/i)
-        .find("[type=checkbox]")
-        .first()
-        .as("checkbox-1");
-      cy.get("@checkbox-1")
-        .check({ force: true });
-      cy.get("@checkbox-1").should("be.checked");
+      // -- get checkbox and uncheck it
+    cy.get("@toasterConfigCard")
+      .contains("nb-checkbox", /show toast with icon/i)
+      .find("[type=checkbox]")
+      .first()
+      .as("checkbox-3");
+    cy.get("@checkbox-3")
+      .click({ force: true });
+    cy.get("@checkbox-3").should("not.be.checked");
+  });
+});
 
-       // -- get checkbox and uncheck it
-      cy.get("@toasterConfigCard")
-        .contains("nb-checkbox", /show toast with icon/i)
-        .find("[type=checkbox]")
-        .first()
-        .as("checkbox-3");
-      cy.get("@checkbox-3")
-        .click({ force: true });
-      cy.get("@checkbox-3").should("not.be.checked");
+describe("Modal & Overlays - Tooltip", () => {
+  beforeEach(() => {
+    cy.visit("/");
+    // -- navigate to Modal & Overlays -> Toastr
+    cy.navigateTo(["Modal & Overlays", "Tooltip"]);
+    cy.contains("nb-card", /tooltip with icon/i).as("tooltipCard");
+    cy.contains("nb-card", /colored tooltips/i).as("coloredTooltipsCard");
+  });
+
+  it("should handle the tooltip correctly", () => {
+    cy.get("@coloredTooltipsCard").contains("button", /default/i).click();
+    cy.get("nb-tooltip").should("contain", "This is a tooltip");
+  });
+});
+
+describe("Modal & Overlays - Dialog Boxes", () => {
+  beforeEach(() => {
+    cy.visit("/");
+    // -- navigate to Modal & Overlays -> Dialog
+    cy.navigateTo(["Modal & Overlays", "Dialog"]);
+    cy.contains("nb-card", /open dialog/i).as("openDialogCard");
+  });
+
+  it("should handle the dialog box correctly", () => {
+    cy.get("@openDialogCard").contains("button", /open dialog with component/i).click();
+    cy.get("nb-dialog-container").should("contain", "This is a title passed to the dialog component");
+    cy.get("nb-dialog-container").contains("button", /dismiss dialog/i).click();
+    cy.get("nb-dialog-container").should("not.exist");
+  });
+});
+
+describe("Tables & Data ...", () => {
+  beforeEach(() => {
+    cy.visit("/");
+    // -- navigate to Tables & Data -> Smart Table
+    cy.navigateTo(["Tables & Data", "Smart Table"]);
+    cy.contains("nb-card", /smart table/i).as("smartTableCard");
+  });
+
+  it("should find a specific row and allow updating a column", () => {
+
+    cy.get("@smartTableCard")
+      .find("tbody")
+      .contains("tr", "Larry")
+      .then(row => {
+        cy.wrap(row).find(".nb-edit").click();
+        cy.wrap(row).find("input[placeholder=Age]").clear().type("25");
+        cy.wrap(row).find(".nb-checkmark").click();
+        cy.wrap(row).find("td").its(6).should("contain", "25");
+      });
+  });
+
+  it("should add a user to the table", () => {
+
+    cy.get("@smartTableCard")
+      .find("thead")
+      .find("th .nb-plus")
+      .click();
+    cy.get("thead tr").last().then(row => {
+      cy.wrap(row).find("input[placeholder='First Name']").clear().type("Hansi");
+      cy.wrap(row).find("input[placeholder='Last Name']").clear().type("Hampelmann");
+      cy.wrap(row).find("input[placeholder='E-mail']").clear().type("hansi@horsti.de");
+      cy.wrap(row).find("td .nb-checkmark").click();
+    });
+    cy.get("@smartTableCard")
+      .find("tbody tr")
+      .first()
+      .should("contain", "Hampelmann");
+    // -- use within - just for fun
+    cy.get("@smartTableCard")
+      .find("tbody tr")
+      .first()
+      .within($row => {
+        cy.get("td").its(2).should("contain", "Hansi");
+        cy.get("td").its(3).should("contain", "Hampelmann");
+        cy.get("td").its(5).should("contain", "hansi@horsti.de");
+      });
+  });
+
+  it("should properly filter table rows", () => {
+    // test a couple of values -> use cy.wrap
+    const age = [20, 30, 40];
+    cy.wrap(age).each($age => {
+      cy.get("@smartTableCard")
+      .find("thead tr")
+      .last()
+      .within($row => {
+        cy.get("input[placeholder=Age]").clear().type($age);
+      });
+      cy.wait(500);
+      cy.get("tbody tr").each($row => {
+        cy.wrap($row).get("td").its(6).should("contain", $age);
+      });
+    });
+
+    // -- test for non-existing value
+    cy.get("@smartTableCard")
+      .find("thead tr")
+      .last()
+      .within($row => {
+        cy.get("input[placeholder=Age]").clear().type(999);
+      });
+    cy.wait(500);
+    cy.get("tbody tr").each($row => {
+      cy.wrap($row).should("contain", "No data found");
     });
   });
 
+  it.only("should display a browser alert window to confirm deletion of a row", () => {
+    cy.get("@smartTableCard")
+      .find("tbody tr")
+      .first()
+      .within($row => {
+        // cy.get("td").find(".nb-trash").click();
+        const stub = cy.stub();
+        cy.on("window:confirm", stub);
+        cy.get("td").find(".nb-trash").click().then(() => {
+          expect(stub.getCall(0)).to.be.calledWith("Are you sure you want to delete?");
+        });
+      });
+  });
 });
+
 
 // recursive function - since while is not allowed in cypress code
   function selectMonthAndYearAndDay(daysToAdd) {
